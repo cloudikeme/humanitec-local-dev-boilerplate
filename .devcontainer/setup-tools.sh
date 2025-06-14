@@ -11,7 +11,13 @@ sudo apt-get install -y mkcert libnss3-tools
 echo "📦 Installing Taskfile.dev..."
 sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b ~/.local/bin
 
-echo "✅ mkcert and task installed!"
+echo "🔧 Installing yq..."
+YQ_VERSION=$(curl -sL https://api.github.com/repos/mikefarah/yq/releases/latest | jq -r .tag_name)
+curl -Lo yq https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64
+chmod +x yq
+sudo mv yq /usr/local/bin/yq
+
+echo "✅ mkcert, task, and yq installed!"
 
 SCORE_COMPOSE_VERSION=$(curl -sL https://api.github.com/repos/score-spec/score-compose/releases/latest | jq -r .tag_name)
 wget https://github.com/score-spec/score-compose/releases/download/${SCORE_COMPOSE_VERSION}/score-compose_${SCORE_COMPOSE_VERSION}_linux_amd64.tar.gz
