@@ -17,7 +17,16 @@ curl -Lo yq https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_l
 chmod +x yq
 sudo mv yq /usr/local/bin/yq
 
-echo "✅ mkcert, task, and yq installed!"
+echo "🔧 Installing direnv..."
+DIRENV_VERSION=$(curl -s https://api.github.com/repos/direnv/direnv/releases/latest | jq -r .tag_name)
+curl -Lo direnv https://github.com/direnv/direnv/releases/download/${DIRENV_VERSION}/direnv.linux-amd64
+chmod +x direnv
+sudo mv direnv /usr/local/bin/direnv
+
+echo 'eval "$(direnv hook bash)"' >> ~/.bashrc
+source ~/.bashrc
+
+echo "✅ mkcert, task, yq and direnv installed!"
 
 SCORE_COMPOSE_VERSION=$(curl -sL https://api.github.com/repos/score-spec/score-compose/releases/latest | jq -r .tag_name)
 wget https://github.com/score-spec/score-compose/releases/download/${SCORE_COMPOSE_VERSION}/score-compose_${SCORE_COMPOSE_VERSION}_linux_amd64.tar.gz
