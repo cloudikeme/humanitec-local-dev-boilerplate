@@ -4,27 +4,14 @@ cd setup-tools
 
 set -euo pipefail
 
-echo "📦 Installing Taskfile.dev CLI (task)..."
+echo "🔧 Installing mkcert..."
+sudo apt-get update
+sudo apt-get install -y mkcert libnss3-tools
 
-# Install Task
-sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b /usr/local/bin
+echo "📦 Installing Taskfile.dev..."
+sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b ~/.local/bin
 
-echo "✅ Taskfile.dev installed successfully!"
-
-echo "📦 Installing mkcert..."
-
-# Install mkcert dependencies
-apt-get update && apt-get install -y libnss3-tools curl
-
-# Download mkcert binary
-MKCERT_VERSION=$(curl -s https://api.github.com/repos/FiloSottile/mkcert/releases/latest | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
-curl -L -o /usr/local/bin/mkcert "https://github.com/FiloSottile/mkcert/releases/latest/download/mkcert-v${MKCERT_VERSION}-linux-amd64"
-chmod +x /usr/local/bin/mkcert
-
-# Setup local CA (Optional: run this manually if interactive setup is needed)
-mkcert -install
-
-echo "✅ mkcert installed successfully!"
+echo "✅ mkcert and task installed!"
 
 SCORE_COMPOSE_VERSION=$(curl -sL https://api.github.com/repos/score-spec/score-compose/releases/latest | jq -r .tag_name)
 wget https://github.com/score-spec/score-compose/releases/download/${SCORE_COMPOSE_VERSION}/score-compose_${SCORE_COMPOSE_VERSION}_linux_amd64.tar.gz
