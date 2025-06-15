@@ -28,48 +28,6 @@ source ~/.bashrc
 
 echo "✅ mkcert, task, yq and direnv installed!"
 
-# Detect architecture
-ARCH=$(uname -m)
-[ "$ARCH" == "x86_64" ] && ARCH="amd64"
-[ "$ARCH" == "aarch64" ] && ARCH="arm64"
-
-# Install Terraform
-VERSION="1.5.7"
-wget "https://releases.hashicorp.com/terraform/${VERSION}/terraform_${VERSION}_linux_${ARCH}.zip"
-unzip terraform_${VERSION}_linux_${ARCH}.zip
-mv terraform /usr/local/bin/
-rm terraform_${VERSION}_linux_${ARCH}.zip
-
-# Install glow
-mkdir -p /etc/apt/keyrings
-curl -fsSL https://repo.charm.sh/apt/gpg.key | gpg --dearmor -o /etc/apt/keyrings/charm.gpg
-echo "deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *" > /etc/apt/sources.list.d/charm.list
-apt update
-apt install glow -y
-
-# Install kubectl
-curl -sLO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/${ARCH}/kubectl"
-chmod +x ./kubectl
-mv ./kubectl /usr/local/bin/kubectl
-
-# Setup kubectl autocomplete
-mkdir -p $HOME/.kube
-echo "source <(kubectl completion bash)" >> $HOME/.bashrc
-echo "complete -F __start_kubectl k" >> $HOME/.bashrc
-
-# Create Docker network 'kind'
-docker network create -d=bridge -o com.docker.network.bridge.enable_ip_masquerade=true \
-  -o com.docker.network.driver.mtu=1500 \
-  --subnet fc00:f853:ccd:e793::/64 kind
-
-# Install helm
-mkdir /tmp/helm
-curl -fsSL https://get.helm.sh/helm-v3.14.4-linux-amd64.tar.gz > /tmp/helm/helm.tar.gz
-tar -zxvf /tmp/helm/helm.tar.gz -C /tmp/helm
-install -o root -g root -m 0755 /tmp/helm/linux-amd64/helm /usr/local/bin/helm
-helm completion bash > /etc/bash_completion.d/helm
-rm -rf /tmp/helm
-
 SCORE_COMPOSE_VERSION=$(curl -sL https://api.github.com/repos/score-spec/score-compose/releases/latest | jq -r .tag_name)
 wget https://github.com/score-spec/score-compose/releases/download/${SCORE_COMPOSE_VERSION}/score-compose_${SCORE_COMPOSE_VERSION}_linux_amd64.tar.gz
 tar -xvf score-compose_${SCORE_COMPOSE_VERSION}_linux_amd64.tar.gz
