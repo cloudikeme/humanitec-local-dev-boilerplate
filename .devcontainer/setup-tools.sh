@@ -28,9 +28,6 @@ source ~/.bashrc
 
 echo "✅ mkcert, task, yq and direnv installed!"
 
-apt-get update -y
-apt-get install -y curl unzip wget net-tools jq bash-completion
-
 # Detect architecture
 ARCH=$(uname -m)
 [ "$ARCH" == "x86_64" ] && ARCH="amd64"
