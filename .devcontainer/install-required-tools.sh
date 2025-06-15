@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+mkdir setup-tools
+cd setup-tools
+
+set -euo pipefail
 
 # Define a sudo wrapper
 run_as_root() {
@@ -38,9 +42,22 @@ if ! command -v mkcert &> /dev/null; then
 fi
 
 # taskfile
+#if ! command -v task &> /dev/null; then
+  #echo "Installing Taskfile..."
+  #sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b /usr/local/bin
+#fi
+
+# Install Taskfile
 if ! command -v task &> /dev/null; then
-  echo "Installing Taskfile..."
-  sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b /usr/local/bin
+  echo "Task not found. Installing..."
+  TASK_VERSION="3.37.2"
+  curl -sL "https://github.com/go-task/task/releases/download/v${TASK_VERSION}/task_linux_${ARCH}.tar.gz" -o task.tar.gz
+  tar -xzf task.tar.gz task
+  rm task.tar.gz
+  run_as_root mv task /usr/local/bin/task
+  run_as_root chown root: /usr/local/bin/task
+else
+  echo "Task is already installed."
 fi
 
 # yq
@@ -70,10 +87,22 @@ if ! command -v terraform &> /dev/null; then
 fi
 
 # glow
-if ! command -v glow &> /dev/null; then
-  echo "Installing glow..."
-  curl -sSfL https://raw.githubusercontent.com/charmbracelet/glow/main/install.sh | sh
-  run_as_root mv ~/.local/bin/glow /usr/local/bin/glow || true
+#if ! command -v glow &> /dev/null; then
+  #echo "Installing glow..."
+  #curl -sSfL https://raw.githubusercontent.com/charmbracelet/glow/main/install.sh | sh
+  #run_as_root mv ~/.local/bin/glow /usr/local/bin/glow || true
+#fi
+
+# Install glow to be able to read MD files in the terminal
+if ! command -v glow &> /dev/null
+then
+  echo "glow not found. Installing..."
+  run_as_root mkdir -p /etc/apt/keyrings
+  curl -fsSL https://repo.charm.sh/apt/gpg.key | run_as_root gpg --dearmor -o /etc/apt/keyrings/charm.gpg
+  echo "deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *" | run_as_root tee /etc/apt/sources.list.d/charm.list
+  run_as_root apt update && run_as_root apt install glow -y
+else
+  echo "glow is already installed."
 fi
 
 # kubectl
@@ -97,23 +126,35 @@ if ! command -v helm &> /dev/null; then
   curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 fi
 
-# score-compose
-if ! command -v score-compose &> /dev/null; then
-  echo "Installing score-compose..."
-  VERSION="0.10.1"
-  curl -L "https://github.com/score-spec/score-compose/releases/download/v${VERSION}/score-compose_${VERSION}_${OS}_${ARCH}.tar.gz" | tar xz
-  chmod +x score-compose
-  run_as_root mv score-compose /usr/local/bin/
+
+# For score-compose AMD64 / x86_64
+if ! command -v score-compose &> /dev/null
+then
+  echo "score-compose not found. Installing..."
+  [ $(uname -m) = x86_64 ] && curl -sLO "https://github.com/score-spec/score-compose/releases/download/0.29.2/score-compose_0.29.2_linux_amd64.tar.gz"
+  # For score-compose ARM64
+  [ $(uname -m) = aarch64 ] && curl -sLO "https://github.com/score-spec/score-compose/releases/download/0.29.2/score-compose_0.29.2_linux_arm64.tar.gz"
+  tar xvzf score-compose*.tar.gz
+  rm score-compose*.tar.gz README.md LICENSE
+  run_as_root mv ./score-compose /usr/local/bin/score-compose
+  run_as_root chown root: /usr/local/bin/score-compose
+else
+  echo "score-compose is already installed."
 fi
 
-# score-k8s
-if ! command -v score-k8s &> /dev/null; then
-  echo "Installing score-k8s..."
-  VERSION="0.1.18"
-  curl -LO "https://github.com/score-spec/score-k8s/releases/download/${VERSION}/score-k8s_${VERSION}_linux_${ARCH}.tar.gz"
-  tar xvzf score-k8s_${VERSION}_linux_${ARCH}.tar.gz
-  run_as_root mv score-k8s /usr/local/bin/
-  rm score-k8s_${VERSION}_linux_${ARCH}.tar.gz LICENSE README.md
+# For score-k8s AMD64 / x86_64
+if ! command -v score-k8s &> /dev/null
+then
+  echo "score-k8s not found. Installing..."
+  [ $(uname -m) = x86_64 ] && curl -sLO "https://github.com/score-spec/score-k8s/releases/download/0.1.18/score-k8s_0.1.18_linux_amd64.tar.gz"
+  # For score-k8s ARM64
+  [ $(uname -m) = aarch64 ] && curl -sLO "https://github.com/score-spec/score-k8s/releases/download/0.1.18/score-k8s_0.1.18_linux_arm64.tar.gz"
+  tar xvzf score-k8s*.tar.gz
+  rm score-k8s*.tar.gz README.md LICENSE
+  run_as_root mv ./score-k8s /usr/local/bin/score-k8s
+  run_as_root chown root: /usr/local/bin/score-k8s
+else
+  echo "score-k8s is already installed."
 fi
 
 # humctl
@@ -134,5 +175,8 @@ if ! command -v kind &> /dev/null; then
   chmod +x ./kind
   run_as_root mv ./kind /usr/local/bin/kind
 fi
+
+cd ..
+rm -rf setup-tools
 
 echo "✅ All tools installed successfully."
