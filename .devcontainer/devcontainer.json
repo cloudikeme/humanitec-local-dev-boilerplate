@@ -12,7 +12,7 @@
       "minikube": "latest"
     }
   },
-  "postCreateCommand": "bash .devcontainer/install-required-tools.sh",
+  "postCreateCommand": "bash .devcontainer/setup-tools.sh",
   "customizations": {
     "vscode": {
       "extensions": [
